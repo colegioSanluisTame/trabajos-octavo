@@ -242,7 +242,7 @@ footer{text-align:center;margin-top:24px;padding:14px 0;border-top:1px solid #dd
 
 <div class="game-header">
 <h2>🔧 Taller de Ensamblaje</h2>
-<p>Ensambla el portátil paso a paso colocando cada componente en su lugar.</p>
+<p>Ambiente virtual de ensamblaje: toma cada parte y ubícala sobre la placa madre siguiendo el orden preciso.</p>
 </div>
 
 <div class="level-selector" id="levelSelector"></div>
@@ -489,14 +489,18 @@ var levelDesign = [
      {comp:"hdd",question:"¿Qué componente tiene platos giratorios y un brazo que lee datos magnéticos?"},
      {comp:"gpu",question:"¿Qué componente se encarga de generar las imágenes en la pantalla?"}
    ]},
-  {type:"assemble", title:"Colocar Componentes", badge:"Medio",
-   desc:"Arrastra cada componente al slot correcto en el portátil.",
+  {type:"assemble", title:"Ensamblar Portátil Completo", badge:"Medio",
+   desc:"Sigue el orden preciso para ensamblar todos los componentes del portátil.",
    steps:[
-     {comp:"mb",  instruction:"Coloca la placa madre como base del portátil"},
-     {comp:"cpu", instruction:"Instala el procesador en el socket de la placa"},
-     {comp:"ram", instruction:"Inserta la memoria RAM en la ranura correspondiente"},
-     {comp:"ssd", instruction:"Fija el SSD M.2 directamente a la placa madre"},
-     {comp:"cool",instruction:"Monta el sistema de refrigeración sobre el CPU"}
+     {comp:"mb",  instruction:"Coloca la placa madre como base del portátil y fíjala al chasis con tornillos"},
+     {comp:"cpu", instruction:"Instala el procesador en el socket ZIF de la placa madre, alineando las marcas de esquina"},
+     {comp:"ram", instruction:"Inserta la memoria RAM en la ranura DIMM presionando hasta que los seguros encajen"},
+     {comp:"ssd", instruction:"Fija el SSD M.2 en ángulo de 45° en su ranura y asegúralo con un tornillo"},
+     {comp:"wifi",instruction:"Inserta la tarjeta Wi-Fi en la ranura M.2 y conecta los cables de las antenas"},
+     {comp:"gpu", instruction:"Coloca la tarjeta gráfica dedicada en su conector y fíjala con tornillos"},
+     {comp:"cool",instruction:"Monta el sistema de refrigeración sobre el CPU aplicando pasta térmica primero"},
+     {comp:"hdd", instruction:"Asegura el disco HDD en la bahía del chasis con tornillos y conecta el cable SATA"},
+     {comp:"bat", instruction:"Conecta el cable de la batería al conector de la placa madre y fíjala al chasis"}
    ]},
   {type:"diagnose", title:"Diagnóstico y Reparación", badge:"Difícil",
    desc:"Identifica y soluciona problemas reales del portátil.",
@@ -682,7 +686,7 @@ function renderIdentify(level){
   var hbar=document.createElement('div');hbar.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:6px';
   var hInfo=document.createElement('span');hInfo.style.cssText='font-size:.8rem;color:#888';
   var done=level.steps.filter(function(x){return x._done;}).length;
-  hInfo.textContent='Paso '+(si+1)+' de 5 — Acertados: '+done;
+      hInfo.textContent='Paso '+(si+1)+' de '+level.steps.length+' — Acertados: '+done;
   hbar.appendChild(hInfo);
   var hBtn=document.createElement('button');hBtn.className='btn btn-info';hBtn.style.cssText='padding:5px 14px;font-size:.75rem';
   hBtn.textContent='❓ Pista';hBtn.onclick=function(){toggleHelp(step.comp);};hbar.appendChild(hBtn);
@@ -695,7 +699,7 @@ function renderIdentify(level){
 function renderAssembly(level){
   var area=document.getElementById('labArea');area.innerHTML='';
   if(completed[currentLevel]){
-    area.innerHTML='<div style="text-align:center;padding:50px 20px"><div style="font-size:3rem;margin-bottom:12px">🖥️</div><h3 style="color:#38a169">✅ Portátil ensamblado y funcionando</h3><p style="color:#666">Todos los componentes están en su lugar.</p></div>';
+    area.innerHTML='<div style="text-align:center;padding:50px 20px"><div style="font-size:3rem;margin-bottom:12px">🖥️</div><h3 style="color:#38a169">✅ Portátil ensamblado y funcionando</h3><p style="color:#666">Los 9 componentes están instalados en el orden correcto. El sistema arranca sin problemas.</p></div>';
     return;
   }
   var si=-1;for(var i=0;i<level.steps.length;i++){if(!level.steps[i]._done){si=i;break;}}
@@ -714,7 +718,7 @@ function renderAssembly(level){
 
   // Instruction bar
   var ibar=document.createElement('div');ibar.className='inst-step';
-  var iNum=document.createElement('div');iNum.className='is-num';iNum.textContent=(si+1);ibar.appendChild(iNum);
+  var iNum=document.createElement('div');iNum.className='is-num';iNum.textContent=(si+1)+' / '+level.steps.length;ibar.appendChild(iNum);
   var iText=document.createElement('div');iText.className='is-text';
   iText.textContent=step.instruction;ibar.appendChild(iText);
   var iHint=document.createElement('div');iHint.className='is-hint';iHint.textContent='❓';iHint.title='Ver pista';
@@ -804,7 +808,7 @@ function renderAssembly(level){
 
   // Progress
   var pq=document.createElement('div');pq.className='progress-qs';
-  for(var j=0;j<5;j++){
+  for(var j=0;j<level.steps.length;j++){
     var d=document.createElement('div');d.className='pq-dot';
     if(level.steps[j]&&level.steps[j]._done)d.classList.add('done');
     if(j===si&&!(level.steps[j]&&level.steps[j]._done))d.classList.add('active');
@@ -875,7 +879,7 @@ function doLevelComplete(level){
     var bootEl=document.getElementById('bootMsg');
     if(bootEl){
       bootEl.style.display='block';bootEl.style.opacity='1';
-      var lines=level.type==='diagnose'?['INICIANDO...','DIAGNÓSTICO OK','SISTEMA REPARADO','TODO FUNCIONANDO']:['INICIANDO...','PLACA MADRE OK','CPU OK','RAM OK','SSD OK','SISTEMA LISTO'];
+      var lines=level.type==='diagnose'?['INICIANDO...','DIAGNÓSTICO OK','SISTEMA REPARADO','TODO FUNCIONANDO']:['INICIANDO...','PLACA MADRE OK','CPU OK','RAM OK','SSD OK','WI-FI OK','GPU OK','REFRIGERACIÓN OK','HDD OK','BATERÍA OK','SISTEMA LISTO'];
       var li=0;
       var tick=function(){
         if(li<lines.length){bootEl.innerHTML='<div class="bi">🔄</div><div class="bt">'+lines[li]+'</div>';li++;bootTimers.push(setTimeout(tick,li===lines.length?600:200));}
@@ -887,7 +891,7 @@ function doLevelComplete(level){
   var fb=document.getElementById('feedback');
   fb.className='feedback success show';
   var msgs={identify:'<h4>✅ ¡Reconociste todos los componentes!</h4><p>Ya sabes identificar cada parte del portátil. Pasa al siguiente nivel.</p>',
-    assemble:'<h4>🚀 ¡Portátil ensamblado!</h4><p>Los 5 componentes están instalados correctamente. El sistema enciende.</p>',
+    assemble:'<h4>🚀 ¡Portátil ensamblado!</h4><p>Los 9 componentes están instalados correctamente en orden. El sistema enciende.</p>',
     diagnose:'<h4>🔧 ¡Problemas solucionados!</h4><p>Diagnosticaste y reparaste todas las fallas del portátil.</p>'};
   fb.innerHTML=msgs[level.type]||'<h4>✅ Nivel completado</h4>';
   var nextBtn=document.getElementById('nextLevelBtn');
